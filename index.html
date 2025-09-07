@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>تفاحة الحظ — ديمو</title>
+<style>
+  /* Стили остаются без изменений */
+  :root{
+    --bg-dark: #0b0b0b;
+    --panel: linear-gradient(180deg,#0f1110,#0b0b0b);
+    --gold: #d4af37;
+    --gold-soft: rgba(212,175,55,0.12);
+    --green: #0fb26b;
+    --accent-shadow: 0 8px 30px rgba(0,0,0,0.7);
+    --glass: rgba(255,255,255,0.02);
+  }
+  html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(800px 400px at 50% 30%, rgba(11,88,40,0.12), transparent 20%),
+      var(--bg-dark);
+    color:#e9efe9;
+    padding:24px;
+  }
+  .container{
+    width:min(1200px,98vw);
+    background:var(--panel);
+    border-radius:16px;
+    padding:28px;
+    box-shadow: var(--accent-shadow);
+    border:1px solid rgba(212,175,55,0.06);
+    position:relative;
+    overflow:hidden;
+  }
+  .container::before, .container::after{
+    content:"";
+    position:absolute; top:0; bottom:0; width:12%;
+    pointer-events:none;
+    background: linear-gradient(180deg, rgba(212,175,55,0.08), transparent 40%);
+    mix-blend-mode:screen;
+  }
+  .container::before{ left:0; transform: skewX(-10deg); }
+  .container::after{ right:0; transform: skewX(10deg); }
+  header{display:flex; gap:16px; align-items:center; margin-bottom:18px;}
+  .logo{display:flex; align-items:center; gap:12px;}
+  .logo .badge{width:64px;height:64px;border-radius:12px;
+    background:linear-gradient(135deg,#0b5130,#08341f);
+    display:flex;align-items:center;justify-content:center;
+    border:2px solid rgba(212,175,55,0.18);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03);}
+  .logo .badge svg{filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));}
+  h1{font-size:22px;margin:0}
+  p.lead{margin:0;color:rgba(233,239,233,0.7);font-size:13px}
+  .main{display:flex; gap:20px; align-items:flex-start;}
+  .board-wrap{background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+    border-radius:12px; padding:18px; flex:1;
+    border:1px solid rgba(255,255,255,0.02);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);}
+  .grid{display:grid; grid-template-columns: repeat(5, 1fr); gap:14px;}
+  .column{background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.2));
+    border-radius:10px; padding:8px; min-height:360px;
+    display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:flex-start; position:relative;}
+  .col-label{font-size:12px; color:var(--gold); text-shadow: 0 2px 6px rgba(0,0,0,0.7); margin-bottom:6px;}
+  .cell{width:78%; aspect-ratio:1/1; border-radius:50%; background:var(--glass);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    transition: transform .18s ease, box-shadow .18s ease; position:relative;}
+  .cell:hover{ transform: translateY(-4px); }
+  .apple{width:60%; height:60%;
+    background: radial-gradient(circle at 30% 30%, #ff5e5e, #c62a2a 60%);
+    border-radius:50%; display:flex;align-items:center;justify-content:center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.6), inset 0 6px 14px rgba(255,200,200,0.1);
+    transform: translateY(0); transition: transform .25s cubic-bezier(.2,.9,.2,1);}
+  .apple::after{content:""; position:absolute; width:26%; height:26%;
+    background: linear-gradient(180deg,#7bd48b,#3a8b4f); border-radius:4px;
+    top:8%; right:12%; transform: rotate(-18deg);}
+  .apple.hidden{ display:none; }
+  .column.winning{box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 24px rgba(16,120,60,0.14);
+    border: 1px solid rgba(15,178,110,0.12); transform: translateY(-6px);}
+  .apple.win{animation: pop .9s ease;
+    box-shadow: 0 14px 36px rgba(15,178,110,0.12), 0 0 18px rgba(15,178,110,0.12);}
+  @keyframes pop{0%{ transform: scale(.7) translateY(6px);}
+    60%{ transform: scale(1.06) translateY(-6px);}100%{ transform: scale(1) translateY(0);}}
+  .runner{position:absolute; height:18px; width:70px; left:calc(50% - 35px); top:-10px;
+    border-radius:8px; display:flex;align-items:center;justify-content:center;
+    font-weight:700; font-size:13px; color:#061a12;
+    background:linear-gradient(180deg,#daf5d9,#b8f0bf);
+    transform:translateX(0); transition:transform .18s cubic-bezier(.2,.9,.2,1);
+    pointer-events:none; box-shadow: 0 8px 20px rgba(0,0,0,0.6);}
+  .controls{width:320px; display:flex; flex-direction:column; gap:14px;}
+  .card{background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.08));
+    padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.02);}
+  .buttons{ display:flex; gap:12px; margin-top:8px; }
+  .btn{flex:1; padding:12px 14px; border-radius:10px;
+    border:1px solid rgba(255,255,255,0.04);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    cursor:pointer; font-weight:700; letter-spacing:.3px;
+    transition: transform .12s ease, box-shadow .12s ease;}
+  .btn:active{ transform:translateY(2px); }
+  .btn.start{background: linear-gradient(180deg,#0fb26b,#089e55);
+    color:white; box-shadow: 0 8px 28px rgba(11,178,110,0.12);
+    border: 1px solid rgba(255,255,255,0.02);}
+  .btn.signal{background: linear-gradient(180deg,#d9c28a,#caa952); color:#111;}
+  .btn.reset{background: transparent; color:rgba(233,239,233,0.9);
+    border:1px dashed rgba(255,255,255,0.04);}
+  .status{font-size:14px;padding:10px;border-radius:10px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.06));
+    text-align:center;}
+  @media (max-width:980px){
+    .main{flex-direction:column;}
+    .controls{width:100%;}
+    .grid .cell{ width:75%; }
+  }
+</style>
+</head>
+<body>
+  <div class="container" role="application" aria-label="تفاحة الحظ ديمو">
+    <header>
+      <div class="logo">
+        <div class="badge" aria-hidden="true">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.5 4a2.5 2.5 0 00-2.2 1.45c-.45 1.03-.9 1.72-1.58 1.72s-1.12-.69-1.57-1.72A2.5 2.5 0 007.5 4" stroke="#e8f7ea" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7.2 8.7C4.6 9.9 3 12.8 3 15.6A6.5 6.5 0 009.5 22c1.9 0 2.7-1 4.5-1s2.6 1 4.5 1A6.5 6.5 0 0021 15.6c0-3.1-2.6-6-5.6-6.9" stroke="#fff7" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>تفاحة الحظ — ديمو</h1>
+          <p class="lead">إضغط "جيب السيڨنال" ومن بعد "بدا". واش السهم يوقف على العمود وين راهي التفاحة؟</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="main">
+      <div class="board-wrap">
+        <div id="runner" class="runner" aria-hidden="true">▶</div>
+        <div class="grid" id="grid" role="grid" aria-label="لوحة اللعب">
+          <!-- генерируется через JS -->
+        </div>
+      </div>
+
+      <aside class="controls">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong>التحكم</strong>
+            <small style="color:rgba(233,239,233,0.6);font-size:12px">5 عواميد × 5 صفوف</small>
+          </div>
+
+          <div class="buttons" style="margin-top:12px">
+            <button id="signalBtn" class="btn signal" title="حط تفاح عشوائي">جيب السيڨنال</button>
+            <button id="startBtn" class="btn start" title="خلي السهم يجري">بدا</button>
+            <button id="resetBtn" class="btn reset" title="نحي كلش">مسح</button>
+          </div>
+
+          <div class="status" id="status" style="margin-top:12px">نستناو فالسيڨنال...</div>
+        </div>
+
+        <div class="card">
+          <strong>معلومات</strong>
+          <p style="margin:8px 0 0;color:rgba(233,239,233,0.7);font-size:13px">
+            منطق ديمو: <br>
+            • "جيب السيڨنال" — كل صف فيه تفاحة وحدة بمكان عشوائي.<br>
+            • "بدا" — السهم يوقف على عمود عشوائي. إذا فيه تفاحة ⇒ تربح.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const COLUMNS = 5;
+  const ROWS = 5;
+
+  const gridEl = document.getElementById('grid');
+  const signalBtn = document.getElementById('signalBtn');
+  const startBtn = document.getElementById('startBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const statusEl = document.getElementById('status');
+  const runnerEl = document.getElementById('runner');
+
+  let state = {
+    apples: Array.from({length:ROWS}, ()=> Array(COLUMNS).fill(false)),
+    running: false,
+    runnerIndex: 0,
+    runnerTimer: null
+  };
+
+  function randInt(max){ return Math.floor(Math.random() * max); }
+
+  function buildGrid(){
+    gridEl.innerHTML = "";
+    for (let c = 0; c < COLUMNS; c++){
+      const col = document.createElement('div');
+      col.className = 'column';
+      col.dataset.col = String(c);
+      const label = document.createElement('div');
+      label.className = 'col-label';
+      label.innerText = `عمود ${c+1}`;
+      col.appendChild(label);
+
+      for (let r = 0; r < ROWS; r++){
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.row = String(r);
+        cell.dataset.col = String(c);
+
+        const apple = document.createElement('div');
+        apple.className = 'apple hidden';
+        apple.setAttribute('aria-hidden', 'true');
+        cell.appendChild(apple);
+
+        col.appendChild(cell);
+      }
+      gridEl.appendChild(col);
+    }
+    positionRunner(0, true);
+  }
+
+  function renderApples(){
+    document.querySelectorAll('.apple').forEach(a => {
+      a.classList.add('hidden');
+      a.classList.remove('win');
+    });
+    for (let r = 0; r < ROWS; r++){
+      for (let c = 0; c < COLUMNS; c++){
+        if (state.apples[r][c]){
+          const selector = `.cell[data-row="${r}"][data-col="${c}"] .apple`;
+          const el = document.querySelector(selector);
+          if (el) el.classList.remove('hidden');
+        }
+      }
+    }
+  }
+
+  function positionRunner(colIndex, immediate=false){
+    const columns = document.querySelectorAll('.column');
+    if (!columns.length) return;
+    const target = columns[colIndex];
+    if (!target) return;
+    const gridRect = gridEl.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const left = (targetRect.left - gridRect.left) + (targetRect.width/2) - (runnerEl.offsetWidth/2);
+    if (immediate){
+      runnerEl.style.transition = 'none';
+      runnerEl.style.transform = `translateX(${left}px)`;
+      void runnerEl.offsetWidth;
+      runnerEl.style.transition = '';
+    } else {
+      runnerEl.style.transform = `translateX(${left}px)`;
+    }
+    state.runnerIndex = colIndex;
+  }
+
+  function generateSignal(){
+    state.apples = Array.from({length:ROWS}, ()=> Array(COLUMNS).fill(false));
+    for (let r = 0; r < ROWS; r++){
+      const c = randInt(COLUMNS);
+      state.apples[r][c] = true;
+    }
+    renderApples();
+    statusEl.innerText = 'السيڨنال وصل — التفاح تحط.';
+  }
+
+  function columnHasApple(colIndex){
+    for (let r = 0; r < ROWS; r++){
+      if (state.apples[r][colIndex]) return true;
+    }
+    return false;
+  }
+
+  function runAndStop(){
+    if (state.running) return;
+    state.running = true;
+    statusEl.innerText = 'يجري...';
+    signalBtn.disabled = true; startBtn.disabled = true;
+
+    const final = randInt(COLUMNS);
+
+    let cycles = 12 + randInt(8);
+    let tick = 0;
+    let speed = 90;
+    function step(){
+      const next = (state.runnerIndex + 1) % COLUMNS;
+      positionRunner(next);
+
+      tick++;
+      const factor = 1 + (tick / cycles) * 2;
+      const nextDelay = Math.min(400, Math.round(speed * factor));
+
+      if (tick >= cycles && state.runnerIndex === final){
+        finishRun(final);
+        return;
+      }
+      state.runnerTimer = setTimeout(step, nextDelay);
+    }
+    step();
+  }
+
+  function finishRun(finalCol){
+    setTimeout(()=> {
+      state.running = false;
+      document.querySelectorAll('.column').forEach((colEl, idx) => {
+        colEl.classList.toggle('winning', idx === finalCol);
+      });
+      const isWin = columnHasApple(finalCol);
+      if (isWin){
+        for (let r = 0; r < ROWS; r++){
+          if (state.apples[r][finalCol]){
+            const sel = `.cell[data-row="${r}"][data-col="${finalCol}"] .apple`;
+            const el = document.querySelector(sel);
+            if (el) el.classList.add('win');
+          }
+        }
+        statusEl.innerHTML = `ربحت! السهم وقف في <strong>عمود ${finalCol+1}</strong>.`;
+      } else {
+        statusEl.innerHTML = `ماكانش تفاحة فـ العمود ${finalCol+1} — خسرت. جرّب ثاني.`;
+      }
+      signalBtn.disabled = false;
+      startBtn.disabled = false;
+    }, 180);
+  }
+
+  function resetBoard(){
+    for (let r=0;r<ROWS;r++) for (let c=0;c<COLUMNS;c++) state.apples[r][c]=false;
+    document.querySelectorAll('.column').forEach(c=>c.classList.remove('winning'));
+    renderApples();
+    statusEl.innerText = 'تم المسح.';
+  }
+
+  buildGrid();
+  renderApples();
+
+  signalBtn.addEventListener('click', ()=>{
+    if (state.running) return;
+    generateSignal();
+  });
+
+  startBtn.addEventListener('click', ()=>{
+    if (state.running) return;
+    const anyApple = state.apples.some(row => row.some(Boolean));
+    if (!anyApple){
+      statusEl.innerText = 'مازال ماكانش سيڨنال: التفاح ما تحطش. إضغط "جيب السيڨنال".';
+      return;
+    }
+    runAndStop();
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    if (state.running) {
+      clearTimeout(state.runnerTimer);
+      state.runnerTimer = null;
+      state.running = false;
+    }
+    resetBoard();
+  });
+
+  gridEl.addEventListener('click', (ev)=>{
+    const cell = ev.target.closest('.cell');
+    if (!cell) return;
+    const r = Number(cell.dataset.row);
+    const c = Number(cell.dataset.col);
+    state.apples[r][c] = !state.apples[r][c];
+    renderApples();
+    statusEl.innerText = `صف ${r+1}, عمود ${c+1}: التفاحة ${state.apples[r][c] ? 'تحطات' : 'تنحات'}.`;
+  });
+
+  window.addEventListener('keydown', (e)=>{
+    if (e.code === 'Space') {
+      e.preventDefault();
+      startBtn.click();
+    }
+  });
+
+  window.addEventListener('load', ()=> positionRunner(0, true));
+})();
+</script>
+</body>
+</html>
